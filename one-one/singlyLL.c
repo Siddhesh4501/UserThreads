@@ -1,7 +1,14 @@
-#include "mythread.h"
+#include "singlyLL.h"
+#include <stdlib.h>
+#include <sys/mman.h>
 
-
-void clearResources(thread* thr);
+void clearResources(thread* thr){
+    if(thr == NULL ) return;
+    munmap(thr->thread_attr->stackpointer, thr->thread_attr->stacksize + thr->thread_attr->guardsize);
+    free(thr->thread_attr);
+    free(thr);
+    return;
+}
 
 
 void insertInLL(thread** head,thread* newthread){
