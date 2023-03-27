@@ -7,6 +7,8 @@
 #include <string.h>
 #include <syscall.h>
 #include <linux/futex.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "mythread.h"
 #include "locks.h"
 #include "singlyLL.h"
@@ -61,19 +63,18 @@ int wrapper(void* arg){
     
     void* functionarg = newthread->arg;
 
-    // void*(*funptr)(void*) = newthread->funptr;
+    void*(*funptr)(void*) = newthread->funptr;
     // printf("%p\n",funptr);
-    newthread->retval = (newthread->funptr)(functionarg); 
+    newthread->retval = (funptr)(functionarg); 
     // printf("%d\n",*((int*)retval));
     void (*exitfun)() = newthread->thread_attr->exitfun;
     if(exitfun)
        exitfun();
-    // lock_lock(&lock_var);
-    // deleteFromLL(&head, (thread_id)gettid());
-    // lock_unlock(&lock_var);
-    // lock_unlock(&lock_var);
     // printf("calling function\n"); 
     // printf("hello in wrapper\n");
+    lock_lock(&lock_var);
+    deleteFromLL(&head, gettid());
+    lock_unlock(&lock_var);
     return 0;
 }
 
@@ -144,8 +145,8 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
     // printf("%p\n",newthread->thread_attr->stackpointer);
     thread_id cloneid = clone(wrapper, newthread->thread_attr->stackpointer + newthread->thread_attr->stacksize + newthread->thread_attr->guardsize, CLONE_FLAGS, newthread, &(newthread->tid), NULL, &(newthread->tid));
     if(cloneid == -1){
-        // printf("thread failed\n");
-        // exit(1);
+        printf("thread failed\n");
+        exit(1);
     }
 
     newthread->tid = cloneid;
@@ -153,8 +154,6 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
     lock_lock(&lock_var);
     insertInLL(&head,newthread);
     lock_unlock(&lock_var);
-    // printf("IN mythread create2\n");
-    // printf("in create\n");
     *tid = cloneid;
     return 0;
 
@@ -166,21 +165,18 @@ int mythread_join(thread_id tid, void** retval){
     lock_lock(&lock_var);
     thread* currentthread = getThreadFromTid(head, tid);
     lock_unlock(&lock_var);
-    // if(currentthread == NULL){
-    //     printf("in mythread join %d \n",tid);
-    //     return 1;
-    // }
-    // printf("before while loop %d \n",tid);
+    if(currentthread == NULL){
+        // printf("in mythread join %d \n",tid);
+        return 1;
+    }
     while(currentthread->tid == tid){
         lock_lock(&lock_var);
         // printf("fdfd\n");
         lock_unlock(&lock_var);
     }
-    // printf("after while loop %d \n",tid);
-    // printf("%d \n",currentthread->tid);
+    // waitpid(tid, NULL, __WALL);
     if(retval != NULL){
         (*retval) = currentthread->retval;
     }
-    // printf("returning join\n");
     return 0;
 }
