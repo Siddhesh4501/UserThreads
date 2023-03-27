@@ -14,9 +14,9 @@ void* fun1(void* arg){
     // fprintf(stdout, "Hello world\n");
     printf("hello\n");
     // fflush(stdout);
-    int* p = (int*)malloc(sizeof(int));
-    *p = 1111;
-    return p;
+    // int* p = (int*)malloc(sizeof(int));
+    // *p = 1111;
+    // return p;
 }
 
 int main(){
