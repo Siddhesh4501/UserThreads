@@ -9,28 +9,26 @@
 #include <linux/futex.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "mythread.h"
 #include "locks.h"
 #include "singlyLL.h"
 
 thread* head;
 lock_t lock_var;
-
+lock_t lock_for_init;
 
 
 
 int mythread_create(thread_id* tid, void* attr,void*(*funptr)(void*), void* arg);
 int mythread_join(thread_id tid,void** retval);
 int mythread_kill(thread_id tid,int sig);
+void mythread_exit(void* ret); 
 int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, void* thread_attr);
 void initThreadStructures();
 
 
-
-
 void initThreadStructures(){
-    // printf("ininitthread\n");
-    
     lock_init(&lock_var);
 
     lock_lock(&lock_var);
@@ -38,10 +36,11 @@ void initThreadStructures(){
     lock_unlock(&lock_var);
 
     thread* newthread = (thread*)malloc(sizeof(thread));
-    if(newthread == NULL)
-       exit(100);
+    if(newthread == NULL){
+        perror("Error in creating main thread\n");
+        return;
+    }
     initialiseThreadObject(newthread, NULL, NULL, NULL);
-    // printf("initthreadfinish\n");
     newthread->tid = getpid();
     newthread->tidcopy = newthread->tid;
 
@@ -50,57 +49,43 @@ void initThreadStructures(){
     lock_unlock(&lock_var);
 
     return;
-
 }
 
 int wrapper(void* arg){
-    // printf("in wrapper12323\n");
-
-
-    // lock_lock(&lock_var);
     thread* newthread = (thread*)arg;
-    
-    
     void* functionarg = newthread->arg;
-
     void*(*funptr)(void*) = newthread->funptr;
-    // printf("%p\n",funptr);
     newthread->retval = (funptr)(functionarg); 
-    // printf("%d\n",*((int*)retval));
     void (*exitfun)() = newthread->thread_attr->exitfun;
     if(exitfun)
        exitfun();
-    // printf("calling function\n"); 
-    // printf("hello in wrapper\n");
-    lock_lock(&lock_var);
-    deleteFromLL(&head, gettid());
-    lock_unlock(&lock_var);
+    mythread_exit(NULL);
     return 0;
 }
 
 
 void* allocateStackSpace(memsize stacksize, memsize guardsize){
     void* mem;
-    mem = mmap(NULL, stacksize + guardsize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS , -1, 0);
-    if(mem == MAP_FAILED){
+    mem = malloc(stacksize + guardsize);
+    if(mem == NULL){
+        perror("malloc failed in stack\n");
         return NULL;
     }
-    // printf("in allocate stack %p \n",mem);
     return mem;
 
 }
 
 int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, void* thread_attr){
     newthread->thread_attr = (attr*)malloc(sizeof(attr));
-    // printf("%d \n",sizeof(attr));
-    if(newthread->thread_attr == NULL)
-       return 1;
+    if(newthread->thread_attr == NULL){
+        perror("Error in creating thread attribute\n");
+        return 1;
+    }
     newthread->funptr = funptr;
     newthread->arg = arg;
     newthread->next = NULL;
 
     if(thread_attr == NULL){
-        // printf("%p\n",newthread->thread_attr);
         attr* thattr = newthread->thread_attr;
         thattr->exitfun = NULL;
         thattr->flag = 0;
@@ -112,27 +97,22 @@ int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, 
     }
     newthread->thread_attr->stackpointer = allocateStackSpace(newthread->thread_attr->stacksize, newthread->thread_attr->guardsize);
     if(newthread->thread_attr->stackpointer == NULL){
-        exit(1);
+        perror("Error in allocating memory for stack\n");
         return 1;
     }
-        // printf("intinitialisthreadobject\n");
     return 0;
 
 }
 
-
-
 int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), void* arg){
-    // printf("in mythread create\n");
-
-
     static int is_first_thread = 1;
-
+    
+    lock_lock(&lock_for_init);
     if(is_first_thread){
         is_first_thread = 0;
         initThreadStructures();
     }
-
+    lock_unlock(&lock_for_init);
 
     thread* newthread = (thread*)malloc(sizeof(thread));
     if(newthread == NULL){
@@ -141,19 +121,18 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
     if(initialiseThreadObject(newthread, funptr, arg, thread_attr) !=0 )
        return 1;
 
-
-    // printf("%p\n",newthread->thread_attr->stackpointer);
     thread_id cloneid = clone(wrapper, newthread->thread_attr->stackpointer + newthread->thread_attr->stacksize + newthread->thread_attr->guardsize, CLONE_FLAGS, newthread, &(newthread->tid), NULL, &(newthread->tid));
+    // printf("clone %d\n",cloneid);
     if(cloneid == -1){
-        printf("thread failed\n");
-        exit(1);
+        perror("clone failed\n");
+        return 1;
     }
-
     newthread->tid = cloneid;
     newthread->tidcopy = cloneid;
     lock_lock(&lock_var);
     insertInLL(&head,newthread);
     lock_unlock(&lock_var);
+
     *tid = cloneid;
     return 0;
 
@@ -166,17 +145,52 @@ int mythread_join(thread_id tid, void** retval){
     thread* currentthread = getThreadFromTid(head, tid);
     lock_unlock(&lock_var);
     if(currentthread == NULL){
-        // printf("in mythread join %d \n",tid);
         return 1;
     }
     while(currentthread->tid == tid){
-        lock_lock(&lock_var);
-        // printf("fdfd\n");
-        lock_unlock(&lock_var);
     }
-    // waitpid(tid, NULL, __WALL);
     if(retval != NULL){
         (*retval) = currentthread->retval;
     }
     return 0;
+}
+
+int mythread_kill(thread_id tid, int sig){
+    if(sig < 1 || sig > 31)
+        return 1;
+    if(tid <= 0)
+        return 1;
+
+    thread_id currid = gettid();
+    if(sig == SIGINT || sig == SIGSTOP || sig == SIGCONT){
+        lock_lock(&lock_var);
+        killToAllThreads(&head, currid, sig);
+        lock_unlock(&lock_var); 
+    }
+    lock_lock(&lock_var);
+    deleteFromLL(&head, currid);
+    lock_unlock(&lock_var); 
+    tgkill(getpid(), currid, sig);
+    return 0;
+}
+
+
+
+void mythread_exit(void* ret){
+
+    thread_id tid = gettid();
+    lock_lock(&lock_var);
+    thread* currentthread = getThreadFromTid(head, tid);
+    lock_unlock(&lock_var);
+    if(currentthread == NULL){
+        return;
+    }
+    if(ret != NULL){
+        currentthread->retval = ret;
+    }
+
+    lock_lock(&lock_var);
+    deleteFromLL(&head, tid);
+    lock_unlock(&lock_var);
+    tgkill(getpid(), gettid(), SIGINT);
 }
