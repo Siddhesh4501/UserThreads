@@ -1,5 +1,6 @@
 #include "singlyLL.h"
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/mman.h>
 
 void clearResources(thread* thr){
@@ -60,12 +61,12 @@ thread* getThreadFromTid(thread* head, thread_id tid){
     return NULL;
 }
 
-
 void killToAllThreads(thread** head, thread_id tid, int sig){
     thread* curr = (*head);
     while(curr){
         if(curr->tid != tid){
-           deleteFromLL(head, curr->tid);
+            if(sig == SIGINT)
+               deleteFromLL(head, curr->tid);
            tgkill(getpid(), curr->tid, sig);
         }
         curr = curr->next;

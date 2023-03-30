@@ -105,7 +105,7 @@ int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, 
 }
 
 int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), void* arg){
-    static int is_first_thread = 1;
+    static int is_first_thread = 1; //
     
     lock_lock(&lock_for_init);
     if(is_first_thread){
@@ -141,13 +141,13 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
 int mythread_join(thread_id tid, void** retval){
     if(tid <= 0)
        return 1;
-    lock_lock(&lock_var);
+    lock_lock(&lock_var);//No need
     thread* currentthread = getThreadFromTid(head, tid);
     lock_unlock(&lock_var);
     if(currentthread == NULL){
         return 1;
     }
-    while(currentthread->tid == tid){
+    while(currentthread && currentthread->tid == tid){
     }
     if(retval != NULL){
         (*retval) = currentthread->retval;
@@ -161,15 +161,18 @@ int mythread_kill(thread_id tid, int sig){
     if(tid <= 0)
         return 1;
 
+
     thread_id currid = gettid();
     if(sig == SIGINT || sig == SIGSTOP || sig == SIGCONT){
         lock_lock(&lock_var);
         killToAllThreads(&head, currid, sig);
+        lock_unlock(&lock_var);
+    }
+    if(sig == SIGINT){
+        lock_lock(&lock_var);
+        deleteFromLL(&head, currid);
         lock_unlock(&lock_var); 
     }
-    lock_lock(&lock_var);
-    deleteFromLL(&head, currid);
-    lock_unlock(&lock_var); 
     tgkill(getpid(), currid, sig);
     return 0;
 }

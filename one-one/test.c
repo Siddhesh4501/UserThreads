@@ -17,15 +17,19 @@ void* fun1(void* arg){
     }
 }
 
+void* fun2(void* d){
+    printf("hello\n");
+}
+
 int main(){
     thread_id t1,t2,t3;
     int k = 10;
     int m = 9;
     // printf("hello\n");
-    mythread_create(&t1, NULL, fun1, NULL);
-    mythread_create(&t3, NULL, fun1, NULL);
-    sleep(1);
-    mythread_create(&t2, NULL, fun1, &t1);
+    mythread_create(&t1, NULL, fun2, NULL);
+    mythread_create(&t3, NULL, fun2, NULL);
+    // sleep(1);
+    mythread_create(&t2, NULL, fun2, &t1);
     // sleep(1);
     // mythread_create(&t2, NULL, fun1, &k);
     // mythread_create(&t3, NULL, fun1, &m);
