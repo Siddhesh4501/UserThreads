@@ -116,6 +116,7 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
         lock_unlock(&lock_for_init);
     }
     else{
+
         thread* newthread = (thread*)malloc(sizeof(thread));
         if(newthread == NULL){
             return 1;
