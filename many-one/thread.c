@@ -21,10 +21,6 @@ singlyLL que;
 thread_id currTid;
 
 
-
-
-
-
 void intiManyToOne();
 int mythread_create(thread_id* tid, void* attr,void*(*funptr)(void*), void* arg);
 int mythread_join(thread_id tid, void** retval);
@@ -65,7 +61,6 @@ void setTimer(int duration){
     timer.it_value.tv_usec = duration;
     timer.it_interval.tv_sec = 0;
     timer.it_interval.tv_usec = duration;
-
     setitimer(ITIMER_VIRTUAL,&timer,NULL);
 }
 
