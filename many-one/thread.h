@@ -40,9 +40,10 @@ typedef struct thread{
 } thread;
 
 
-typedef queue{
-    thread *front,*back;
-}queue;
+typedef struct singlyLL{
+    thread *front;
+    thread *back;
+}singlyLL;
 
 
 void intiManyToOne();
