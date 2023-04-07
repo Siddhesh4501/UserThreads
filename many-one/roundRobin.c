@@ -5,9 +5,9 @@ void addToQueue(singlyLL* sll, thread* currthread);
 thread* getRunnableThread(singlyLL* sll);
 void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev);
 thread* removeThread(singlyLL* sll, thread* currthread);
+thread* getThread(singlyLL* sll, thread_id tid);
 
-
-void addToQueue(singlyLL* sll, thread* currthread){
+void addToSLL(singlyLL* sll, thread* currthread){
     currthread->next = NULL;
     if(sll->front == NULL && sll->back){
         sll->front = currthread;
@@ -29,6 +29,15 @@ thread* getRunnableThread(singlyLL* sll){
         }
         prev = head;
         head = head->next;
+    }
+    return NULL;
+}
+
+thread* getThread(singlyLL* sll, thread_id tid){
+    thread* head = sll->front;
+    while(head){
+        if(head->tid == tid)
+          return head;
     }
     return NULL;
 }

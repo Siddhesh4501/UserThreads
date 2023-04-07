@@ -30,11 +30,11 @@ typedef struct thread{
     attr* thread_attr;
     void* retval;
     thread_state state;
-    sigjmp_buf context;
+    sigjmp_buf* context;
     int noOfPendingSignals;
     int* pendingSigArr;
     int noOfWaiters;
-    int* waitersTid;
+    thread_id* waitersTid;
     int noOfJoins;
     struct thread *next;
 } thread;
