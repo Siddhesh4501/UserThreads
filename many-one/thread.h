@@ -46,7 +46,6 @@ typedef struct singlyLL{
 }singlyLL;
 
 
-void intiManyToOne();
 
 int mythread_create(thread_id* tid, void* attr,void*(*funptr)(void*), void* arg);
 int mythread_join(thread_id tid, void** retval);

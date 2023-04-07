@@ -23,7 +23,6 @@ thread* currThread;
 thread* scheduler_thread;
 thread* mainThread;
 
-void intiManyToOne();
 int mythread_create(thread_id* tid, void* attr,void*(*funptr)(void*), void* arg);
 int mythread_join(thread_id tid, void** retval);
 int mythread_kill(thread_id tid,int sig);
@@ -91,17 +90,22 @@ void switchToScheduler(){
 
 void scheduler(){
     resetScheduling(SIGVTALRM);
+
     if(currThread->state == EXITED)
         removeThread(&sll, currThread);
     if(currThread->state == RUNNING)
         currThread->state = RUNNABLE;
+
     thread* nextThread = getRunnableThread(&sll);
+
     if(nextThread == NULL)
        return;
+
     currThread = nextThread;
     currThread->state = RUNNING;
     siglongjmp(*(currThread->context),1);
 }
+
 void messageWaiters(thread_id* waitersTid, int n){
     for(int i = 0; i < n; i++){
         thread_id tid = waitersTid[i];
