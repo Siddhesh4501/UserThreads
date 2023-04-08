@@ -107,38 +107,33 @@ int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, 
 int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), void* arg){
     static int is_first_thread = 1; //
     
+    lock_lock(&lock_for_init);
     if(is_first_thread){
-        lock_lock(&lock_for_init);
-        
         is_first_thread = 0;
         initThreadStructures();
-        
-        lock_unlock(&lock_for_init);
     }
-    else{
-        thread* newthread = (thread*)malloc(sizeof(thread));
-        if(newthread == NULL){
-            return 1;
-        }
-        if(initialiseThreadObject(newthread, funptr, arg, thread_attr) !=0 )
+    lock_unlock(&lock_for_init);
+    thread* newthread = (thread*)malloc(sizeof(thread));
+    if(newthread == NULL){
         return 1;
-
-        thread_id cloneid = clone(wrapper, newthread->thread_attr->stackpointer + newthread->thread_attr->stacksize + newthread->thread_attr->guardsize, CLONE_FLAGS, newthread, &(newthread->tid), NULL, &(newthread->tid));
-        // printf("clone %d\n",cloneid);
-        if(cloneid == -1){
-            perror("clone failed\n");
-            return 1;
-        }
-        newthread->tid = cloneid;
-        newthread->tidcopy = cloneid;
-        lock_lock(&lock_var);
-        insertInLL(&head,newthread);
-        lock_unlock(&lock_var);
-
-        *tid = cloneid;
-        return 0;
-
     }
+    if(initialiseThreadObject(newthread, funptr, arg, thread_attr) !=0 )
+    return 1;
+
+    thread_id cloneid = clone(wrapper, newthread->thread_attr->stackpointer + newthread->thread_attr->stacksize + newthread->thread_attr->guardsize, CLONE_FLAGS, newthread, &(newthread->tid), NULL, &(newthread->tid));
+    // printf("clone %d\n",cloneid);
+    if(cloneid == -1){
+        perror("clone failed\n");
+        return 1;
+    }
+    newthread->tid = cloneid;
+    newthread->tidcopy = cloneid;
+    lock_lock(&lock_var);
+    insertInLL(&head,newthread);
+    lock_unlock(&lock_var);
+
+    *tid = cloneid;
+    return 0;
 
 }
 

@@ -1,12 +1,12 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include "mythread.h"
+#include "thread.h"
 
 
 // void* fun1(void* arg){
 //     if(arg){
 //         int* k = (int*)arg;
-//         // mythread_kill(*k,2);
+//         mythread_kill(*k,2);
 //         printf("in t2\n");
 //         while(1){
 //             printf("in\n");
@@ -27,11 +27,12 @@ int main(){
     int m = 9;
     // printf("hello\n");
     mythread_create(&t1, NULL, fun2, NULL);
+    printf("%d\n",t1);
     // printf("%d",t1);
-    mythread_create(&t3, NULL, fun2, NULL);
+    // mythread_create(&t3, NULL, fun2, NULL);
     // printf("%d",t3);
     // sleep(1);
-    mythread_create(&t2, NULL, fun2, &t1);
+    // mythread_create(&t2, NULL, fun2, &t1);
     // sleep(1);
     // mythread_create(&t2, NULL, fun1, &k);
     // mythread_create(&t3, NULL, fun1, &m);
@@ -44,6 +45,8 @@ int main(){
     // mythread_join(t3,NULL);
     // mythread_join(t3,NULL);
     // sleep(1);
+    // sleep(1);
+    while(1);
 
     return 0;
 }

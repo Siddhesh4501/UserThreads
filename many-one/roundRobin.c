@@ -1,22 +1,25 @@
 #include "roundRobin.h"
 
 
-void addToQueue(singlyLL* sll, thread* currthread);
+void addToSLL(singlyLL* sll, thread* currthread);
 thread* getRunnableThread(singlyLL* sll);
 void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev);
-thread* removeThread(singlyLL* sll, thread* currthread);
 thread* getThread(singlyLL* sll, thread_id tid);
+void removeThread(singlyLL* sll, thread* currthread);
 
 void addToSLL(singlyLL* sll, thread* currthread){
     currthread->next = NULL;
-    if(sll->front == NULL && sll->back){
+    if(sll->front == NULL){
         sll->front = currthread;
         sll->back = currthread;
+        return;
     }
     thread* head = sll->front;
     while(head->next)
         head = head->next;
     head->next = currthread;
+    sll->back->next = currthread;
+    sll->back = currthread;
 }
 
 thread* getRunnableThread(singlyLL* sll){
@@ -25,6 +28,7 @@ thread* getRunnableThread(singlyLL* sll){
     while(head){
         if(head->state == RUNNABLE){
             moveThreadToEnd(sll, head, prev);
+            printf("getrunn\n");
             return head;
         }
         prev = head;
@@ -52,18 +56,19 @@ void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev){
     sll->back->next = currthread;
     sll->back = currthread;
     currthread->next = NULL;
+    printf("in move end\n");
 }
 
-thread* removeThread(singlyLL* sll, thread* currthread){
+void removeThread(singlyLL* sll, thread* currthread){
     if((sll->front == sll->back) && (sll->front == currthread)){
         sll->front = NULL;
         sll->back = NULL;
-        freeSources(currthread);
+        // freeSources(currthread);
         return;
     }
     if(sll->front == currthread){
         sll->front = sll->front->next;
-        freeSources(currthread);
+        // freeSources(currthread);
         return;
     }
     thread* head = sll->front;
@@ -71,10 +76,21 @@ thread* removeThread(singlyLL* sll, thread* currthread){
     while(head){
         if(head == currthread){
             prev->next = head->next;
-            freeSources(currthread);
+            if(head->next == sll->back)
+                sll->back = prev;
+            // freeSources(currthread);
         }
         prev = head;
         head = head->next;
     }
     return;
+}
+
+void printSLL(singlyLL sll){
+    thread *head = sll.front;
+    while(head != NULL){
+        printf("threadId: %d\n",head->tid);
+        head = head->next;
+    }
+    printf("head %p\n",head);
 }
