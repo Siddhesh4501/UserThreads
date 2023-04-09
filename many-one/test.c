@@ -18,7 +18,7 @@
 // }
 
 void* fun2(void* d){
-    printf("hello\n");
+    printf("hello!!!!!!!!!!!!!!\n");
 }
 
 int main(){
@@ -27,7 +27,8 @@ int main(){
     int m = 9;
     // printf("hello\n");
     mythread_create(&t1, NULL, fun2, NULL);
-    printf("%d\n",t1);
+    mythread_create(&t2, NULL, fun2, NULL);
+    // printf("%d\n",t1);
     // printf("%d",t1);
     // mythread_create(&t3, NULL, fun2, NULL);
     // printf("%d",t3);
@@ -46,7 +47,9 @@ int main(){
     // mythread_join(t3,NULL);
     // sleep(1);
     // sleep(1);
-    while(1);
+    while(1){
+        // printf("hello\n");
+    }
 
     return 0;
 }

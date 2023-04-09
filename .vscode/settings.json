@@ -2,6 +2,7 @@
     "files.associations": {
         "*.embeddedhtml": "html",
         "locks.h": "c",
-        "mythread.h": "c"
+        "mythread.h": "c",
+        "thread.h": "c"
     }
 }

@@ -13,7 +13,6 @@
 #include <sys/time.h>
 #include"thread.h"
 #include"roundRobin.h"
-#include "encrypt.h"
 
 
 sigset_t set;
@@ -72,12 +71,12 @@ void setTimer(int duration){
 
 
 void swapContext(sigjmp_buf* old, sigjmp_buf* new){
-    // printf("in swap context\n");
+    printf("in swap context\n");
     int ret = sigsetjmp(*old, 1);
     if(ret == 0)
         siglongjmp(*new, 1);
-    // printf("in swap context1\n");
-    // printf("after swap context long jump\n");
+    printf("in swap context1\n");
+    printf("after swap context long jump\n");
 }
 
 void setScheduling(int sig){
@@ -105,26 +104,25 @@ void switchToScheduler(){
 void scheduler(){
     resetScheduling(SIGVTALRM);  
     // printf("in scheduler\n");
-    // printSLL(sll);
+    printSLL(sll);
     if(currThread->state == EXITED){
-        // printf("exited called\n");
         removeThread(&sll, currThread);
     }
     if(currThread->state == RUNNING){
-        // printf("runningg called\n");
+        printf("runningg called\n");
 
         currThread->state = RUNNABLE;
     }
-    // printSLL(sll);
+    printSLL(sll);
     thread* nextThread = getRunnableThread(&sll);
-    // printf("%p \n",nextThread);
-    // printf("in scheduler!!!!!!!!!!!!!!!!!!!\n");
+    printf("%p \n",nextThread);
+    printf("in scheduler!!!!!!!!!!!!!!!!!!!\n");
     if(nextThread == NULL)
        return;
 
     currThread = nextThread;
     currThread->state = RUNNING;
-    // printf("in sched %p\n",currThread);
+    printf("in sched %p\n",currThread);
     setScheduling(SIGVTALRM);
     siglongjmp(*(currThread->context),1);
 }
@@ -236,16 +234,16 @@ void initManyToOne(){
     mainThread = (thread*)malloc(sizeof(thread));
     initialiseThread(mainThread, getCurrTid(), NULL, NULL, NULL, RUNNING, 1);
     addToSLL(&sll,mainThread);
-    // printf("step2\n");
+    // // printf("step2\n");
     currThread = mainThread;
     // printf("currthread %p\n",currThread);
 
 
     schedulerThread = (thread*)malloc(sizeof(thread));
-    // printf("sched add %p\n",schedulerThread);
+    // // printf("sched add %p\n",schedulerThread);
     initialiseThread(schedulerThread, getNextTid(), scheduler, NULL, NULL,RUNNABLE, 2);
     
-    // printf("main thread add %p, scheduler add %p\n",mainThread,schedulerThread);
+    printf("main thread add %p, scheduler add %p\n",mainThread,schedulerThread);
     setScheduling(SIGVTALRM);
     setTimer(1000);
 }
@@ -267,7 +265,7 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
     if(initialiseThread(newthread, getNextTid(), funptr, arg, thread_attr, RUNNABLE, 0) !=0 )
        return 1;
     // printf("step1\n");
-    // printf("in thread create %p\n",newthread);
+    printf("in thread create %p\n",newthread);
     addToSLL(&sll, newthread);
     // printSLL(sll);
     *tid = getCurrTid();
