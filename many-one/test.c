@@ -18,6 +18,7 @@
 // }
 
 void* fun2(void* d){
+    mythread_exit(NULL);
     printf("hello!!!!!!!!!!!!!!\n");
 }
 
@@ -27,29 +28,14 @@ int main(){
     int m = 9;
     // printf("hello\n");
     mythread_create(&t1, NULL, fun2, NULL);
+    printf("%d \n",t1);
     mythread_create(&t2, NULL, fun2, NULL);
-    // printf("%d\n",t1);
-    // printf("%d",t1);
-    // mythread_create(&t3, NULL, fun2, NULL);
-    // printf("%d",t3);
-    // sleep(1);
-    // mythread_create(&t2, NULL, fun2, &t1);
-    // sleep(1);
-    // mythread_create(&t2, NULL, fun1, &k);
-    // mythread_create(&t3, NULL, fun1, &m);
-    // sleep(1);
-    // printf("%d %d \n",t1,t2);
-    // mythread_kill(t1,2);
-    // sleep(2);
-    // mythread_join(t1,NULL);
-    // mythread_join(t2,NULL);
-    // mythread_join(t3,NULL);
-    // mythread_join(t3,NULL);
-    // sleep(1);
-    // sleep(1);
-    while(1){
-        // printf("hello\n");
-    }
+   
+    // while(1){
+    //     // printf("hello\n");
+    // }
+    mythread_join(t1, NULL);
+    mythread_join(t2, NULL);
 
     return 0;
 }

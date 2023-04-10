@@ -42,6 +42,7 @@ thread* getThread(singlyLL* sll, thread_id tid){
     while(head){
         if(head->tid == tid)
           return head;
+        head = head->next;
     }
     return NULL;
 }
@@ -61,7 +62,7 @@ void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev){
 }
 
 void removeThread(singlyLL* sll, thread* currthread){
-    printf("remove thread called\n");
+    // printf("remove thread called\n");
     if((sll->front == sll->back) && (sll->front == currthread)){
         sll->front = NULL;
         sll->back = NULL;

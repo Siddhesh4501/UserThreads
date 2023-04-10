@@ -16,7 +16,6 @@
 #include "encrypt.h"
 
 
-sigset_t set;
 singlyLL sll;
 thread_id currTid;
 thread* currThread;
@@ -49,6 +48,7 @@ thread_id getCurrTid(){
 
 
 void ModifyThreadSignalsMask(){
+    sigset_t set;
     sigfillset(&set);
     sigdelset(&set,SIGINT);
     sigdelset(&set,SIGSTOP);
@@ -71,6 +71,7 @@ void setTimer(int duration){
 }
 
 
+
 void swapContext(sigjmp_buf* old, sigjmp_buf* new){
     // printf("in swap context\n");
     int ret = sigsetjmp(*old, 1);
@@ -91,10 +92,28 @@ void resetScheduling(int sig){
     if(signal(sig, SIG_IGN) == SIG_ERR)
         exit(1);
 }
+
+void deliverAsynchronousSignal(){
+    resetScheduling(SIGVTALRM);
+    sigset_t set;
+    sigemptyset(&set);
+    thread* th = currThread;
+    int n = currThread->noOfPendingSignals;
+    for(int i = 0; i < n; i++){
+        sigaddset(&set, currThread->pendingSigArr[i]);
+        sigprocmask(SIG_UNBLOCK, &set, NULL);
+        kill(getpid(), currThread->pendingSigArr[i]);
+        sigdelset(&set, currThread->pendingSigArr[i]);
+    }
+    ModifyThreadSignalsMask();
+    setScheduling(SIGVTALRM);
+}
+
 void switchToScheduler(){
     resetScheduling(SIGVTALRM);
     // printf("in switch to scheduler\n");
     // printf("switch to shed %p %p\n",currThread,schedulerThread);
+    deliverAsynchronousSignal();
     swapContext(currThread->context, schedulerThread->context);
     setScheduling(SIGVTALRM);
 }
@@ -153,14 +172,9 @@ int wrapper(){
     void (*exitfun)() = currThread->thread_attr->exitfun;
     if(exitfun)
        exitfun();
-    // mythread_exit(NULL);
 
     resetScheduling(SIGVTALRM);
-
-    currThread->state = EXITED;
-    messageWaiters(currThread->waitersTid, currThread->noOfWaiters);
-    // removeThread(&sll, currThread);
-    switchToScheduler();
+    mythread_exit(NULL);
     return 0;
 }
 
@@ -272,6 +286,77 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
     // printSLL(sll);
     *tid = getCurrTid();
     sigsetjmp(*(mainThread->context), 1);
+    setScheduling(SIGVTALRM);
+    return 0;
+}
+
+
+
+int mythread_join(thread_id tid, void** retval){
+    resetScheduling(SIGVTALRM);
+    if(tid < 0){
+        setScheduling(SIGVTALRM);
+       return 1;
+    } 
+    thread* th = getThread(&sll, tid);
+        // printf("in join\n");     
+    if(th == NULL){
+        setScheduling(SIGVTALRM);
+        return 1;
+    }
+    if(th->state == EXITED){
+        if(retval){
+            (*retval) = th->retval;
+            setScheduling(SIGVTALRM);
+            return 0;
+        }
+    }
+    currThread->state = WAITING;
+    currThread->noOfJoins++;
+    th->noOfWaiters++;
+    th->waitersTid = realloc(th->waitersTid, sizeof(thread_id)*(th->noOfWaiters));
+    th->waitersTid[th->noOfWaiters-1] = currThread->tid;
+    switchToScheduler();
+    return 0;
+}
+
+
+void mythread_exit(void* ret){
+    resetScheduling(SIGVTALRM);
+    currThread->state = EXITED;
+    messageWaiters(currThread->waitersTid, currThread->noOfWaiters);
+    removeThread(&sll, currThread);
+    switchToScheduler();
+}
+
+
+int mythread_kill(thread_id tid,int sig){
+    resetScheduling(SIGVTALRM);
+    if(sig < 1 || sig > 31)
+        return 1;
+    if(tid <= 0)
+        return 1;
+
+
+    thread_id currid = getpid();
+    if(sig == SIGINT || sig == SIGSTOP || sig == SIGCONT){
+        kill(currid, sig);
+        setScheduling(SIGVTALRM);
+        return 0;
+    }
+    if(tid == currThread->tid){
+        raise(sig);
+        setScheduling(SIGVTALRM);
+        return 0;
+    }
+    thread* th = getThread(&sll, tid);
+    if(th == NULL){
+        setScheduling(SIGVTALRM);
+        return 1;
+    }
+    th->noOfPendingSignals++;
+    th->pendingSigArr = realloc(th->pendingSigArr, sizeof(int)*(th->noOfPendingSignals));
+    th->pendingSigArr[th->noOfPendingSignals-1] = sig;
     setScheduling(SIGVTALRM);
     return 0;
 }
