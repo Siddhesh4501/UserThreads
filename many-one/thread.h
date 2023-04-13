@@ -13,6 +13,7 @@
 #define SCHED_INTERVAL 200
 
 
+
 typedef struct attr{
     int flag;
     memsize stacksize;
@@ -21,7 +22,7 @@ typedef struct attr{
     void (*exitfun)();
 }attr;
 
-typedef enum thread_state {RUNNING, RUNNABLE, STOPPED, WAITING, EXITED} thread_state;
+typedef enum thread_state {RUNNING, RUNNABLE, WAITING, EXITED} thread_state;
 
 typedef struct thread{
     thread_id tid;
@@ -38,6 +39,9 @@ typedef struct thread{
     int noOfJoins;
     struct thread *next;
 } thread;
+
+
+
 
 
 typedef struct singlyLL{

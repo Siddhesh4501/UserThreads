@@ -7,6 +7,18 @@ void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev);
 thread* getThread(singlyLL* sll, thread_id tid);
 void removeThread(singlyLL* sll, thread* currthread);
 
+void freeSources(thread* thread){
+    if(thread->thread_attr)
+        free(thread->thread_attr);
+    if(thread->pendingSigArr)
+       free(thread->pendingSigArr);
+    if(thread->waitersTid)
+       free(thread->waitersTid);
+    if(thread->context)
+       free(thread->context);
+}
+
+
 void addToSLL(singlyLL* sll, thread* currthread){
     currthread->next = NULL;
     if(sll->front == NULL){
@@ -81,7 +93,7 @@ void removeThread(singlyLL* sll, thread* currthread){
             prev->next = head->next;
             if(head == sll->back)
                 sll->back = prev;
-            // freeSources(currthread);
+            freeSources(currthread);
         }
         prev = head;
         head = head->next;

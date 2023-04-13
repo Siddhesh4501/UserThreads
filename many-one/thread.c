@@ -83,7 +83,7 @@ void swapContext(sigjmp_buf* old, sigjmp_buf* new){
 
 void setScheduling(int sig){
     // printf("in setscheduler\n");
-    if(signal(SIGVTALRM, switchToScheduler) == SIG_ERR)
+    if(signal(sig, switchToScheduler) == SIG_ERR)
         exit(1);
 }
 
@@ -99,12 +99,11 @@ void deliverAsynchronousSignal(){
     sigemptyset(&set);
     thread* th = currThread;
     int n = currThread->noOfPendingSignals;
-    for(int i = 0; i < n; i++){
+    for(int i=0; i<n; i++)
         sigaddset(&set, currThread->pendingSigArr[i]);
-        sigprocmask(SIG_UNBLOCK, &set, NULL);
+    sigprocmask(SIG_UNBLOCK, &set, NULL);
+    for(int i = 0; i < n; i++)
         kill(getpid(), currThread->pendingSigArr[i]);
-        sigdelset(&set, currThread->pendingSigArr[i]);
-    }
     ModifyThreadSignalsMask();
     setScheduling(SIGVTALRM);
 }
@@ -345,7 +344,8 @@ int mythread_kill(thread_id tid,int sig){
         return 0;
     }
     if(tid == currThread->tid){
-        raise(sig);
+        // raise(sig);
+        kill(getpid(), sig);
         setScheduling(SIGVTALRM);
         return 0;
     }
