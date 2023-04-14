@@ -181,10 +181,8 @@ int wrapper(){
 void initialiseContext(sigjmp_buf* context, void* stack, void* fun){
     // printf("in initialsie1111\n");
     sigsetjmp(*context, 1);
-    if(stack){
-        (*context)->__jmpbuf[5] = encrypt((long int)(stack - sizeof(int)));
-        (*context)->__jmpbuf[6] = (*context)->__jmpbuf[5];
-    }
+    if(stack)
+        (*context)->__jmpbuf[5] = encrypt((long int)(stack));
     if(fun)
         (*context)->__jmpbuf[7] = encrypt((long int)fun);
 }
