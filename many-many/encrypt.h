@@ -1,0 +1,1 @@
+long int encrypt(long int p);
