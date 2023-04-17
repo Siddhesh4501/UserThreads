@@ -41,6 +41,7 @@ int main(){
     // }
     // mythread_join(t1, NULL);
     // mythread_join(t2, NULL);
-    while(1);
+    printf("in test file!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 %d\n",gettid());
+    // while(1);
     return 0;
 }

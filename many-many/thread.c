@@ -139,13 +139,18 @@ void switchToScheduler(){
     if(gettid() == getpid()) return;
     for(int i = 0; i < NOOFKERNELTHREADS; i++){
         if(currThreads[i].tid == gettid()){
-            if(currThreadsAlarmStatus[i] == 0) return;
+            if(currThreadsAlarmStatus[i] == 0){
+                // printf("in switch to sched\n");
+                return;
+
+            } 
             else break;
         }
     }
-    printf("in switch to sched\n");
+    // printf("in switch to sched\n");
 
     printf("on timer interrupt %d\n",gettid());
+    // resetScheduling(SIGVTALRM);
     thread* currThread = NULL;
     for(int i = 0; i < NOOFKERNELTHREADS; i++){
         if(currThreads[i].tid == gettid()){
@@ -157,7 +162,6 @@ void switchToScheduler(){
         printf("error %d\n",gettid());
         exit(0);
     }
-    resetScheduling(SIGVTALRM);
     // printf("in switch to scheduler\n");
     // printf("switch to shed %p %p\n",currThread,schedulerThread);
     deliverAsynchronousSignal();
@@ -199,7 +203,7 @@ void scheduler(){
     // printSLL(sll);
     thread* nextThread = NULL;
     while(nextThread == NULL){
-        printf("after in scheduler1\n");
+        // printf("after in scheduler1\n");
         nextThread = getRunnableThread(&sll);
     }
 
@@ -244,11 +248,13 @@ int wrapper(){
     // void (*exitfun)() = currThread->thread_attr->exitfun;
     // if(exitfun)
     //    exitfun();
-
+    currThread->state = EXITED;
     resetScheduling(SIGVTALRM);
     printf("after executing function\n");
     // mythread_exit(NULL);
-    switchToScheduler();
+    printf("wrppaer calling\n");
+    scheduler();
+    printf("wrppaer calling1\n");
     
     return 0;
 }
