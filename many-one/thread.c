@@ -59,7 +59,6 @@ void ModifyThreadSignalsMask(){
 
 
 void setTimer(int duration){
-    // printf("in set timer\n");
     struct itimerval timer;
     timer.it_value.tv_sec = 0;
     timer.it_value.tv_usec = duration;
@@ -73,22 +72,17 @@ void setTimer(int duration){
 
 
 void swapContext(sigjmp_buf* old, sigjmp_buf* new){
-    // printf("in swap context\n");
     int ret = sigsetjmp(*old, 1);
     if(ret == 0)
         siglongjmp(*new, 1);
-    // printf("in swap context1\n");
-    // printf("after swap context long jump\n");
 }
 
 void setScheduling(int sig){
-    // printf("in setscheduler\n");
     if(signal(sig, switchToScheduler) == SIG_ERR)
         exit(1);
 }
 
 void resetScheduling(int sig){
-    // printf("in reset scheduler\n");
     if(signal(sig, SIG_IGN) == SIG_ERR)
         exit(1);
 }
@@ -110,8 +104,6 @@ void deliverAsynchronousSignal(){
 
 void switchToScheduler(){
     resetScheduling(SIGVTALRM);
-    // printf("in switch to scheduler\n");
-    // printf("switch to shed %p %p\n",currThread,schedulerThread);
     deliverAsynchronousSignal();
     swapContext(currThread->context, schedulerThread->context);
     setScheduling(SIGVTALRM);
@@ -122,27 +114,19 @@ void switchToScheduler(){
 
 void scheduler(){
     resetScheduling(SIGVTALRM);  
-    // printf("in scheduler\n");
-    // printSLL(sll);
     if(currThread->state == EXITED){
-        // printf("exited called\n");
         removeThread(&sll, currThread);
     }
     if(currThread->state == RUNNING){
-        // printf("runningg called\n");
 
         currThread->state = RUNNABLE;
     }
-    // printSLL(sll);
     thread* nextThread = getRunnableThread(&sll);
-    // printf("%p \n",nextThread);
-    // printf("in scheduler!!!!!!!!!!!!!!!!!!!\n");
     if(nextThread == NULL)
        return;
 
     currThread = nextThread;
     currThread->state = RUNNING;
-    // printf("in sched %p\n",currThread);
     setScheduling(SIGVTALRM);
     siglongjmp(*(currThread->context),1);
 }
@@ -164,9 +148,7 @@ void messageWaiters(thread_id* waitersTid, int n){
 int wrapper(){
     void*(*funptr)(void*) = currThread->funptr;
     void* functionarg = currThread->arg;
-    // printf("%p %p %p\n",funptr,functionarg,currThread);
     setScheduling(SIGVTALRM);
-    // printf("in wrapper\n");
     currThread->retval = (funptr)(functionarg); 
     void (*exitfun)() = currThread->thread_attr->exitfun;
     if(exitfun)
@@ -179,7 +161,6 @@ int wrapper(){
 
 
 void initialiseContext(sigjmp_buf* context, void* stack, void* fun){
-    // printf("in initialsie1111\n");
     sigsetjmp(*context, 1);
     if(stack)
         (*context)->__jmpbuf[5] = encrypt((long int)(stack));
@@ -212,7 +193,6 @@ int initialiseThread(thread* th, pid_t tid, void* fun, void* arg, void* thread_a
         }
     }
     sigjmp_buf* newthread_context = (sigjmp_buf*)malloc(sizeof(sigjmp_buf));
-    // printf("in intit\n");
     if(threadType == 1)
         initialiseContext(newthread_context, NULL, NULL);
     else if (threadType == 2)
@@ -247,16 +227,12 @@ void initManyToOne(){
     mainThread = (thread*)malloc(sizeof(thread));
     initialiseThread(mainThread, getCurrTid(), NULL, NULL, NULL, RUNNING, 1);
     addToSLL(&sll,mainThread);
-    // printf("step2\n");
     currThread = mainThread;
-    // printf("currthread %p\n",currThread);
 
 
     schedulerThread = (thread*)malloc(sizeof(thread));
-    // printf("sched add %p\n",schedulerThread);
     initialiseThread(schedulerThread, getNextTid(), scheduler, NULL, NULL,RUNNABLE, 2);
     
-    // printf("main thread add %p, scheduler add %p\n",mainThread,schedulerThread);
     setScheduling(SIGVTALRM);
     setTimer(1000);
 }
@@ -277,10 +253,7 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
         return 1;
     if(initialiseThread(newthread, getNextTid(), funptr, arg, thread_attr, RUNNABLE, 0) !=0 )
        return 1;
-    // printf("step1\n");
-    // printf("in thread create %p\n",newthread);
     addToSLL(&sll, newthread);
-    // printSLL(sll);
     *tid = getCurrTid();
     sigsetjmp(*(mainThread->context), 1);
     setScheduling(SIGVTALRM);
@@ -296,7 +269,6 @@ int mythread_join(thread_id tid, void** retval){
        return 1;
     } 
     thread* th = getThread(&sll, tid);
-        // printf("in join\n");     
     if(th == NULL){
         setScheduling(SIGVTALRM);
         return 1;
@@ -342,7 +314,6 @@ int mythread_kill(thread_id tid,int sig){
         return 0;
     }
     if(tid == currThread->tid){
-        // raise(sig);
         kill(getpid(), sig);
         setScheduling(SIGVTALRM);
         return 0;

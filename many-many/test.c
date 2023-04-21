@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<signal.h>
 #include "thread.h"
 
 
@@ -23,7 +24,11 @@ void* fun1(void* d){
 }
 void* fun2(void* d){
     // mythread_exit(NULL);
-    printf("hello!!!!!!!!!!!! %d\n",gettid());
+    printf("in exit call\n");
+    // mythread_exit(NULL);
+    while(1){
+        printf("hello!!!!!!!!!!!! %d\n",gettid());
+    }
 }
 
 int main(){
@@ -41,7 +46,8 @@ int main(){
     // }
     // mythread_join(t1, NULL);
     // mythread_join(t2, NULL);
-    printf("in test file!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 %d\n",gettid());
-    // while(1);
+    // mythread_kill(t1, SIGABRT);
+    // printf("in test file!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 %d\n",gettid());
+    while(1);
     return 0;
 }

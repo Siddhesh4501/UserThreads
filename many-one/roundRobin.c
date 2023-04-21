@@ -37,7 +37,6 @@ void addToSLL(singlyLL* sll, thread* currthread){
 thread* getRunnableThread(singlyLL* sll){
     thread* head = sll->front;
     thread* prev = NULL;
-    // printf("getrunn %p\n",head);
     while(head){
         if(head->state == RUNNABLE){
             moveThreadToEnd(sll, head, prev);
@@ -60,7 +59,6 @@ thread* getThread(singlyLL* sll, thread_id tid){
 }
 
 void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev){
-    // printf("%p %p\n",sll->front,sll->back);
     if(sll->front == sll->back) return;
     if(currthread == sll->back) return;
     if(currthread == sll->front)
@@ -70,20 +68,16 @@ void moveThreadToEnd(singlyLL* sll, thread* currthread, thread* prev){
     sll->back->next = currthread;
     sll->back = currthread;
     currthread->next = NULL;
-    // printf("in move end %p\n",sll->front);
 }
 
 void removeThread(singlyLL* sll, thread* currthread){
-    // printf("remove thread called\n");
     if((sll->front == sll->back) && (sll->front == currthread)){
         sll->front = NULL;
         sll->back = NULL;
-        // freeSources(currthread);
         return;
     }
     if(sll->front == currthread){
         sll->front = sll->front->next;
-        // freeSources(currthread);
         return;
     }
     thread* head = sll->front;
@@ -98,15 +92,12 @@ void removeThread(singlyLL* sll, thread* currthread){
         prev = head;
         head = head->next;
     }
-    // printSLL(*sll);
     return;
 }
 
 void printSLL(singlyLL sll){
     thread *head = sll.front;
     while(head != NULL){
-        // printf("threadId: %d\n",head->tid);
         head = head->next;
     }
-    // printf("head %p\n",head);
 }
