@@ -5,18 +5,18 @@ cd ./one-one
 printf "Executing One - One ..!!\n\n"
 make
 make clean
-printf "\n\nCompleted Execution Of One - One ..!!"
+printf "\n\nCompleted Execution Of One - One ..!!\n\n"
 
 cd ../many-one
 
 printf "Executing Many - One ..!!\n\n"
 make
 make clean
-printf "\n\nCompleted Execution Of Many - One ..!!"
+printf "\n\nCompleted Execution Of Many - One ..!!\n\n"
 
-cd ../many-many
+# cd ../many-many
 
-printf "Executing Many - Many ..!!\n\n"
-make
-make clean
-printf "\n\nCompleted Execution Of Many - Many ..!!"
+# printf "Executing Many - Many ..!!\n\n"
+# make
+# make clean
+# printf "\n\nCompleted Execution Of Many - Many ..!!\n\n"

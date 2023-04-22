@@ -7,7 +7,6 @@
 
 void* fun1(void* data){
     int a = 10;
-    return;
 }
 
 // void* fun2(void* data){
