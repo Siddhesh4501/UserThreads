@@ -20,22 +20,22 @@
 
 void* fun1(void* d){
     // mythread_exit(NULL);
-    printf("helloworld!!!!!!!!!!!! %d\n",gettid());
+    printf("helloworld %d\n",gettid());
 }
 void* fun2(void* d){
     // mythread_exit(NULL);
-    printf("in exit call\n");
+    printf("in exit call %d\n",gettid());
     // mythread_exit(NULL);
-    while(1){
-        printf("hello!!!!!!!!!!!! %d\n",gettid());
-    }
+    // while(1){
+    //     printf("hello!!!!!!!!!!!! %d\n",gettid());
+    // }
 }
 
 int main(){
     thread_id t1,t2,t3;
     int k = 10;
     int m = 9;
-    printf("hello %d\n",gettid());
+    // printf("hello %d\n",gettid());
     mythread_create(&t1, NULL, fun2, NULL);
     mythread_create(&t2, NULL, fun1, NULL);
     // printf("%d \n",t1);
@@ -44,10 +44,10 @@ int main(){
     // while(1){
     //     // printf("hello\n");
     // }
-    // mythread_join(t1, NULL);
-    // mythread_join(t2, NULL);
+    mythread_join(t1, NULL);
+    mythread_join(t2, NULL);
     // mythread_kill(t1, SIGABRT);
     // printf("in test file!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 %d\n",gettid());
-    while(1);
+    // while(1);
     return 0;
 }

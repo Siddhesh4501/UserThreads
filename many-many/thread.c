@@ -141,7 +141,7 @@ void switchToScheduler(){
         }
     }
 
-    printf("on timer interrupt %d\n",gettid());
+    // printf("on timer interrupt %d\n",gettid());
     thread* currThread = NULL;
     for(int i = 0; i < NOOFKERNELTHREADS; i++){
         if(currThreads[i].tid == gettid()){
@@ -165,7 +165,7 @@ void switchToScheduler(){
 void scheduler(){
     if(gettid() == getpid()) return;
     lock_lock(&sched_lock);
-    printf("in scheduler %d\n",gettid());
+    // printf("in scheduler %d\n",gettid());
     resetScheduling(SIGVTALRM);  
     thread* currThread = NULL;
     int i;
@@ -175,7 +175,7 @@ void scheduler(){
             break;
         }
     }
-    printf("after in scheduler\n");
+    // printf("after in scheduler\n");
 
     if(currThread){
         if(currThread->state == EXITED){
@@ -196,7 +196,7 @@ void scheduler(){
     currThreads[i].userThread = currThread;
     setScheduling(SIGVTALRM);
     lock_unlock(&sched_lock);
-    printf("in sched %p\n",currThread);
+    // printf("in sched %p\n",currThread);
     siglongjmp(*(currThread->context),1);
 }
 
@@ -232,10 +232,11 @@ int wrapper(){
        exitfun();
     currThread->state = EXITED;
     resetScheduling(SIGVTALRM);
-    printf("after executing function\n");
-    printf("wrppaer calling\n");
+    mythread_exit(NULL);
+    // printf("after executing function\n");
+    // printf("wrppaer calling\n");
     scheduler();
-    printf("wrppaer calling1\n");
+    // printf("wrppaer calling1\n");
     
     return 0;
 }
@@ -356,7 +357,7 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
        return 1;
     addToSLL(&sll, newthread);
     *tid = newthread->tid;
-    printf("step1\n");
+    // printf("step1\n");
     return 0;
 }
 
@@ -380,6 +381,10 @@ int mythread_join(thread_id tid, void** retval){
             return 0;
         }
     }
+    if(gettid() == getpid()){
+       while(th && th->state != EXITED);
+    }
+    else{
     thread* currThread = NULL;
     for(int i = 0; i < NOOFKERNELTHREADS; i++){
         if(currThreads[i].tid == gettid()){
@@ -393,6 +398,8 @@ int mythread_join(thread_id tid, void** retval){
     th->noOfWaiters++;
     th->waitersTid = realloc(th->waitersTid, sizeof(thread_id)*(th->noOfWaiters));
     th->waitersTid[th->noOfWaiters-1] = currThread->tid;
+
+    }
     switchToScheduler();
     return 0;
 }
@@ -415,7 +422,7 @@ void mythread_exit(void* ret){
 
 
 int mythread_kill(thread_id tid,int sig){
-    printf("In start\n");
+    // printf("In start\n");
     resetScheduling(SIGVTALRM);
     if(sig < 1 || sig > 31)
         return 1;
@@ -442,7 +449,7 @@ int mythread_kill(thread_id tid,int sig){
     }
     
     thread* th = getThread(&sll, tid);
-    printf("in the end\n");
+    // printf("in the end\n");
     if(th == NULL){
         setScheduling(SIGVTALRM);
         return 1;
