@@ -37,6 +37,13 @@ void* fun6(void* data){
     return (void*)a;
 }
 
+void extifun(){
+    printf("Exit Function worked\n");
+}
+
+void* fun7(void* data){
+}
+
 
 void testCreate(void){
     thread_id ids[5];
@@ -85,6 +92,22 @@ void testExit(void){
        
 }
 
+
+
+
+
+void testExitFun(){
+    thread_id tid;
+    attr th_attr;
+    th_attr.exitfun = extifun;
+    th_attr.stacksize = STD_STACK_SIZE;
+    th_attr.guardsize = STD_GUARD_SIZE;
+    void * retval = malloc(sizeof(int));
+    int ret1 = mythread_create(&tid, &th_attr, fun7, NULL);
+    int ret2 = mythread_join(tid, retval);
+}
+
+
 #define MAT_SIZE 10
 
 int matrix1[MAT_SIZE][MAT_SIZE];
@@ -119,6 +142,7 @@ int main(){
     testJoin();
     testExit();
     testKill();
+    testExitFun();
 
 
 
@@ -154,14 +178,17 @@ int main(){
    for(int i=0;i<MAT_SIZE;i++){
      for(int j=0;j<MAT_SIZE;j++){
         if(ans[i][j] != result[i][j]){
-            printf("Wrong multiplication\n");
+            printf("Wrong Matrix multiplication\n");
             exit(1);
         }
 
 
      }
    }
-   printf("Right multiplication\n");
+   printf("Matrix multiplication is Correct\n");
+
+
+
 
     return 0;
 }

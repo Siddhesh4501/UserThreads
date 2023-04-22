@@ -39,6 +39,13 @@ void* fun6(void* data){
     return (void*)a;
 }
 
+void extifun(){
+    printf("Exit Function worked\n");
+}
+
+void* fun7(void* data){
+}
+
 
 void testCreate(void){
     thread_id ids[5];
@@ -90,6 +97,17 @@ void testExit(void){
     // pr
 }
 
+void testExitFun(){
+    thread_id tid;
+    attr th_attr;
+    th_attr.exitfun = extifun;
+    th_attr.stacksize = STD_STACK_SIZE;
+    th_attr.guardsize = STD_GUARD_SIZE;
+    void * retval = malloc(sizeof(int));
+    int ret1 = mythread_create(&tid, &th_attr, fun7, NULL);
+    int ret2 = mythread_join(tid, retval);
+}
+
 
 
 #define MAT_SIZE 10
@@ -126,6 +144,8 @@ int main(){
     testJoin();
     testExit();
     testKill();
+    testExitFun();
+
 
 
 
