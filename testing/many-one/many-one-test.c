@@ -83,15 +83,85 @@ void testExit(void){
     else
        printf("Thread Exit succeed\n");
        
-    // pr
 }
 
+#define MAT_SIZE 10
+
+int matrix1[MAT_SIZE][MAT_SIZE];
+int matrix2[MAT_SIZE][MAT_SIZE];
+int result[MAT_SIZE][MAT_SIZE];
+int ans[MAT_SIZE][MAT_SIZE];
+thread_id matTid[MAT_SIZE*MAT_SIZE];
+
+
+
+
+typedef struct pair{
+    int a,b;
+} pair;
+
+
+void* multiply(void* data){
+    pair p = *((pair*) data);
+    int sum = 0;
+    for(int i=0; i < MAT_SIZE; i++){
+        sum+=(matrix1[p.a][i]*matrix2[i][p.b]);
+    }
+    result[p.a][p.b] = sum;
+}
+
+
+
 int main(){
+
 
     testCreate();
     testJoin();
     testExit();
     testKill();
+
+
+
+
+    for(int i = 0; i<MAT_SIZE; i++){
+        for(int j=0; j<MAT_SIZE; j++){
+            matrix1[i][j] = i*j;
+        }
+    }
+    for(int i = 0; i<MAT_SIZE; i++){
+        for(int j=0; j<MAT_SIZE; j++){
+            matrix2[i][j] = i*j;
+        }
+    }
+    int counter = 0;
+    for(int i = 0; i<MAT_SIZE; i++){
+        for(int j=0; j<MAT_SIZE; j++){
+            pair p = {i,j};
+            mythread_create(&matTid[counter], NULL, multiply, &p);
+            mythread_join(matTid[counter], NULL);
+            counter++;
+        }
+    }
+
+   for(int i=0;i<MAT_SIZE;i++){
+     for(int j=0;j<MAT_SIZE;j++){
+        for(int k=0;k<MAT_SIZE;k++){
+            ans[i][j] += matrix1[i][k] * matrix2[k][j];
+        }
+     }
+   }
+
+   for(int i=0;i<MAT_SIZE;i++){
+     for(int j=0;j<MAT_SIZE;j++){
+        if(ans[i][j] != result[i][j]){
+            printf("Wrong multiplication\n");
+            exit(1);
+        }
+
+
+     }
+   }
+   printf("Right multiplication\n");
 
     return 0;
 }
