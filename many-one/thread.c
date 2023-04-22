@@ -69,7 +69,14 @@ void setTimer(int duration){
       
 }
 
-
+void defaultSigHandler(int signum){
+    currThread->state = EXITED;
+    mythread_exit(NULL);
+    printf("\nSignal Handled %d\n",signum);
+}
+void setSignalHandlers(){
+    signal(SIGTERM, defaultSigHandler);
+}
 
 void swapContext(sigjmp_buf* old, sigjmp_buf* new){
     int ret = sigsetjmp(*old, 1);
@@ -93,6 +100,7 @@ void deliverAsynchronousSignal(){
     sigemptyset(&set);
     thread* th = currThread;
     int n = currThread->noOfPendingSignals;
+    currThread->noOfPendingSignals = 0;
     for(int i=0; i<n; i++)
         sigaddset(&set, currThread->pendingSigArr[i]);
     sigprocmask(SIG_UNBLOCK, &set, NULL);
@@ -219,6 +227,7 @@ int initialiseThread(thread* th, pid_t tid, void* fun, void* arg, void* thread_a
 
 void initManyToOne(){
     ModifyThreadSignalsMask();
+    setSignalHandlers();
     sll.back = NULL;
     sll.front = NULL;
 

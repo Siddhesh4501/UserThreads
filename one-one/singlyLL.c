@@ -3,13 +3,17 @@
 #include <signal.h>
 #include <sys/mman.h>
 
-void clearResources(thread* thr){
+void clearResources(thread** currthread){
+    thread* thr = (*currthread);
     if(thr == NULL ) return;
     if(thr->thread_attr->stackpointer){
         free(thr->thread_attr->stackpointer);
+        thr->thread_attr->stackpointer = NULL;
     }
-    free(thr->thread_attr);
-    free(thr);
+    if(thr->thread_attr){
+         free(thr->thread_attr);
+         thr->thread_attr = NULL;
+    }
     return;
 }
 
@@ -44,12 +48,11 @@ void deleteFromLL(thread** head, thread_id tid){
     if(curr == NULL) return;
     if(prev == NULL){
         (*head) = curr->next;
-        // clearResources(curr);
+        clearResources(&curr);
         return;
     }
     prev->next = curr->next;
-    // clearResources(curr);
-    // printf("in delete end %p\n",*head);
+    clearResources(&curr);
     return;
 }
 
