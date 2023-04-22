@@ -59,7 +59,8 @@ int wrapper(void* arg){
     void (*exitfun)() = newthread->thread_attr->exitfun;
     if(exitfun)
        exitfun();
-    mythread_exit(NULL);
+    // printf("%p\n",newthread->retval);
+    mythread_exit(newthread->retval);
     return 0;
 }
 
@@ -105,7 +106,7 @@ int initialiseThreadObject(thread* newthread, void*(*funptr)(void*), void* arg, 
 }
 
 int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), void* arg){
-    static int is_first_thread = 1; //
+    static int is_first_thread = 1;
     
     lock_lock(&lock_for_init);
     if(is_first_thread){
@@ -118,10 +119,9 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
         return 1;
     }
     if(initialiseThreadObject(newthread, funptr, arg, thread_attr) !=0 )
-    return 1;
+       return 1;
 
     thread_id cloneid = clone(wrapper, newthread->thread_attr->stackpointer + newthread->thread_attr->stacksize + newthread->thread_attr->guardsize, CLONE_FLAGS, newthread, &(newthread->tid), NULL, &(newthread->tid));
-    // printf("clone %d\n",cloneid);
     if(cloneid == -1){
         perror("clone failed\n");
         return 1;
@@ -140,14 +140,13 @@ int mythread_create(thread_id* tid, void* thread_attr,void*(*funptr)(void*), voi
 int mythread_join(thread_id tid, void** retval){
     if(tid <= 0)
        return 1;
-    lock_lock(&lock_var);//No need
+    lock_lock(&lock_var);
     thread* currentthread = getThreadFromTid(head, tid);
     lock_unlock(&lock_var);
     if(currentthread == NULL){
         return 1;
     }
-    while(currentthread && currentthread->tid == tid){
-    }
+    while(currentthread && currentthread->tid == tid);
     if(retval != NULL){
         (*retval) = currentthread->retval;
     }
@@ -172,7 +171,8 @@ int mythread_kill(thread_id tid, int sig){
         deleteFromLL(&head, currid);
         lock_unlock(&lock_var); 
     }
-    tgkill(getpid(), currid, sig);
+    // tgkill(getpid(), tid, sig);
+    kill(tid, SIGINT);
     return 0;
 }
 
@@ -194,5 +194,6 @@ void mythread_exit(void* ret){
     lock_lock(&lock_var);
     deleteFromLL(&head, tid);
     lock_unlock(&lock_var);
-    tgkill(getpid(), gettid(), SIGINT);
+    kill(gettid(), SIGINT);
+    printf("in exit\n");
 }

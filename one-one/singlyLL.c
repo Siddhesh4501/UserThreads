@@ -34,6 +34,7 @@ void insertInLL(thread** head,thread* newthread){
 
 
 void deleteFromLL(thread** head, thread_id tid){
+    // printf("in delete\n");
     thread* curr = (*head);
     thread* prev = NULL;
     while(curr && curr->tid != tid){
@@ -43,11 +44,12 @@ void deleteFromLL(thread** head, thread_id tid){
     if(curr == NULL) return;
     if(prev == NULL){
         (*head) = curr->next;
-        clearResources(curr);
+        // clearResources(curr);
         return;
     }
     prev->next = curr->next;
-    clearResources(curr);
+    // clearResources(curr);
+    // printf("in delete end %p\n",*head);
     return;
 }
 
