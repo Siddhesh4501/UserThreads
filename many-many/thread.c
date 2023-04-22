@@ -60,6 +60,22 @@ void ModifyThreadSignalsMask(){
     sigprocmask(SIG_BLOCK, &set, NULL);
 }
 
+void defaultSigHandler(int signum){
+    thread* currThread = NULL;
+    for(int i = 0; i < NOOFKERNELTHREADS; i++){
+        if(currThreads[i].tid == gettid()){
+            currThread = currThreads[i].userThread;
+            break;
+        }
+    }
+    currThread->state = EXITED;
+    mythread_exit(NULL);
+    printf("\nSignal Handled %d\n",signum);
+}
+void setSignalHandlers(){
+    signal(SIGTERM, defaultSigHandler);
+}
+
 
 void setTimer(int duration){
     struct itimerval timer;
@@ -78,8 +94,8 @@ void setHandler(int sig){
 }
 
 void swapContext(sigjmp_buf* old, sigjmp_buf* new){
-    printf("%p %p\n",old,new);
-    printf("in swap context\n");
+    // printf("%p %p\n",old,new);
+    // printf("in swap context\n");
     int ret = sigsetjmp(*old, 1);
     if(ret == 0)
         siglongjmp(*new, 1);
@@ -119,10 +135,11 @@ void deliverAsynchronousSignal(){
         }
     }
     int n = currThread->noOfPendingSignals;
+    currThread->noOfPendingSignals = 0;
     for(int i = 0; i < n; i++){
         sigaddset(&set, currThread->pendingSigArr[i]);
         sigprocmask(SIG_UNBLOCK, &set, NULL);
-        tgkill(getpid(), gettid(), currThread->pendingSigArr[i]);
+        kill(gettid(), currThread->pendingSigArr[i]);
         sigdelset(&set, currThread->pendingSigArr[i]);
     }
     ModifyThreadSignalsMask();
@@ -317,6 +334,8 @@ int initialiseThread(thread* th, pid_t tid, void* fun, void* arg, void* thread_a
 
 void initManyToMany(){
     ModifyThreadSignalsMask();
+    setSignalHandlers();
+
     sll.back = NULL;
     sll.front = NULL;
 
@@ -443,7 +462,7 @@ int mythread_kill(thread_id tid,int sig){
         return 0;
     }
     if(tid == currThread->tid){
-        tgkill(getpid(), gettid(), sig);
+        kill(tid, sig);
         setScheduling(SIGVTALRM);
         return 0;
     }
