@@ -1,22 +1,26 @@
 #!/bin/bash
 
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+
 # Change directory to the directory containing the Makefiles
 cd ./one-one
-printf "Executing One - One ..!!\n\n"
+printf "${GREEN}Executing One - One ..!!${NC}\n\n"
 make
 make clean
-printf "\n\nCompleted Execution Of One - One ..!!\n\n"
+printf "\n\n${GREEN}Completed Execution Of One - One ..!!${NC}\n\n"
 
 cd ../many-one
 
-printf "Executing Many - One ..!!\n\n"
+printf "${GREEN}Executing Many - One ..!!${NC}\n\n"
 make
 make clean
-printf "\n\nCompleted Execution Of Many - One ..!!\n\n"
+printf "\n\n${GREEN}Completed Execution Of Many - One ..!!${NC}\n\n"
 
 cd ../many-many
 
-printf "Executing Many - Many ..!!\n\n"
+printf "${GREEN}Executing Many - Many ..!!${NC}\n\n"
 make
 make clean
-printf "\n\nCompleted Execution Of Many - Many ..!!\n\n"
+printf "\n\n${GREEN}Completed Execution Of Many - Many ..!!${NC}\n\n"
